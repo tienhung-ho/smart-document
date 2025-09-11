@@ -1,0 +1,67 @@
+environment: development
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  read_timeout: 30
+  write_timeout: 30
+
+services:
+  auth_api: ${AUTH_SERVICE_URL:http://localhost:8081}
+  auth_rpc: ${AUTH_RPC_URL:auth-rpc-service:9001}
+  document_api: ${DOCUMENT_SERVICE_URL:http://localhost:8082}
+  document_rpc: ${DOCUMENT_RPC_URL:document-rpc-service:9002}
+  collaboration_api: ${COLLABORATION_SERVICE_URL:http://localhost:8083}
+  collaboration_rpc: ${COLLABORATION_RPC_URL:collaboration-rpc-service:9003}
+  workspace_api: ${WORKSPACE_SERVICE_URL:http://localhost:8084}
+  workspace_rpc: ${WORKSPACE_RPC_URL:workspace-rpc-service:9004}
+
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+  database: 0
+
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-change-in-production}
+  expires_in: 3600
+
+rate_limiter:
+  enabled: true
+  requests_per_second: 1000
+  burst: 2000
+  cleanup_interval: 60
+
+cors:
+  allowed_origins:
+    - "*"
+  allowed_methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed_headers:
+    - Content-Type
+    - Authorization
+    - X-Requested-With
+  allow_credentials: true
+
+websocket:
+  read_buffer_size: 1024
+  write_buffer_size: 1024
+  check_origin: false
+
+logging:
+  level: info
+  format: json
+  output: both
+  max_size: 100
+  max_backups: 3
+  max_age: 28
+  compress: true
+
+routes:
+  api_prefix: "/api"
+  health_endpoint: "/health"
+  metrics_endpoint: "/metrics"
