@@ -1,0 +1,68 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smart-document-ingress
+  namespace: smart-document
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/websocket-services: "collaboration-api-service"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: smart-document.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 8080
+  - host: api.smart-document.local
+    http:
+      paths:
+      - path: /auth
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-api-service
+            port:
+              number: 8081
+      - path: /documents
+        pathType: Prefix
+        backend:
+          service:
+            name: document-api-service
+            port:
+              number: 8082
+      - path: /collaboration
+        pathType: Prefix
+        backend:
+          service:
+            name: collaboration-api-service
+            port:
+              number: 8083
+      - path: /workspaces
+        pathType: Prefix
+        backend:
+          service:
+            name: workspace-api-service
+            port:
+              number: 8084
+  - host: minio.smart-document.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio-service
+            port:
+              number: 9001

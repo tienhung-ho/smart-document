@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collaboration-api
+  namespace: smart-document
+  labels:
+    app: collaboration-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: collaboration-api
+  template:
+    metadata:
+      labels:
+        app: collaboration-api
+    spec:
+      containers:
+      - name: collaboration-api
+        image: smart-document/collaboration-api:latest
+        ports:
+        - containerPort: 8083
+        env:
+        - name: COLLABORATION_RPC_URL
+          value: "collaboration-rpc-service:9003"
+        - name: AUTH_RPC_URL
+          value: "auth-rpc-service:9001"
+        envFrom:
+        - configMapRef:
+            name: smart-document-config
+        - secretRef:
+            name: smart-document-secrets
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8083
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8083
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: collaboration-api-service
+  namespace: smart-document
+spec:
+  selector:
+    app: collaboration-api
+  ports:
+  - port: 8083
+    targetPort: 8083
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collaboration-rpc
+  namespace: smart-document
+  labels:
+    app: collaboration-rpc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: collaboration-rpc
+  template:
+    metadata:
+      labels:
+        app: collaboration-rpc
+    spec:
+      containers:
+      - name: collaboration-rpc
+        image: smart-document/collaboration-rpc:latest
+        ports:
+        - containerPort: 9003
+        envFrom:
+        - configMapRef:
+            name: smart-document-config
+        - secretRef:
+            name: smart-document-secrets
+        livenessProbe:
+          exec:
+            command:
+            - grpc_health_probe
+            - -addr=localhost:9003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - grpc_health_probe
+            - -addr=localhost:9003
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: collaboration-rpc-service
+  namespace: smart-document
+spec:
+  selector:
+    app: collaboration-rpc
+  ports:
+  - port: 9003
+    targetPort: 9003

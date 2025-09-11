@@ -1,0 +1,265 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-api:8081
+      - DOCUMENT_SERVICE_URL=http://document-api:8082
+      - COLLABORATION_SERVICE_URL=http://collaboration-api:8083
+      - WORKSPACE_SERVICE_URL=http://workspace-api:8084
+      - REDIS_HOST=redis
+      - JWT_SECRET=smart-document-jwt-secret
+    depends_on:
+      - redis
+      - auth-api
+      - document-api
+      - collaboration-api
+      - workspace-api
+    networks:
+      - smart-document
+
+  # Auth Services
+  auth-api:
+    build:
+      context: .
+      dockerfile: apps/auth/api/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=smart_document
+      - REDIS_HOST=redis
+      - JWT_SECRET=smart-document-jwt-secret
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - smart-document
+
+  auth-rpc:
+    build:
+      context: .
+      dockerfile: apps/auth/rpc/Dockerfile
+    ports:
+      - "9001:9001"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=smart_document
+      - REDIS_HOST=redis
+      - JWT_SECRET=smart-document-jwt-secret
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - smart-document
+
+  # Document Services
+  document-api:
+    build:
+      context: .
+      dockerfile: apps/document/api/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=smart_document
+      - REDIS_HOST=redis
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - STORAGE_ENDPOINT=minio:9000
+      - STORAGE_ACCESS_KEY=minioadmin
+      - STORAGE_SECRET_KEY=minioadmin
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+      - minio
+    networks:
+      - smart-document
+
+  document-rpc:
+    build:
+      context: .
+      dockerfile: apps/document/rpc/Dockerfile
+    ports:
+      - "9002:9002"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=smart_document
+      - REDIS_HOST=redis
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - STORAGE_ENDPOINT=minio:9000
+      - STORAGE_ACCESS_KEY=minioadmin
+      - STORAGE_SECRET_KEY=minioadmin
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+      - minio
+    networks:
+      - smart-document
+
+  # Collaboration Services
+  collaboration-api:
+    build:
+      context: .
+      dockerfile: apps/collaboration/api/Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - REDIS_HOST=redis
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - smart-document
+
+  collaboration-rpc:
+    build:
+      context: .
+      dockerfile: apps/collaboration/rpc/Dockerfile
+    ports:
+      - "9003:9003"
+    environment:
+      - REDIS_HOST=redis
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - smart-document
+
+  # Workspace Services
+  workspace-api:
+    build:
+      context: .
+      dockerfile: apps/workspace/api/Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=smart_document
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - smart-document
+
+  workspace-rpc:
+    build:
+      context: .
+      dockerfile: apps/workspace/rpc/Dockerfile
+    ports:
+      - "9004:9004"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=smart_document
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - smart-document
+
+  # Infrastructure Services
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: smart_document
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - smart-document
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - smart-document
+
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - smart-document
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - smart-document
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - smart-document
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - smart-document
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+  minio_data:
+
+networks:
+  smart-document:
+    driver: bridge

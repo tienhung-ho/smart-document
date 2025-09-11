@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-api
+  namespace: smart-document
+  labels:
+    app: document-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: document-api
+  template:
+    metadata:
+      labels:
+        app: document-api
+    spec:
+      containers:
+      - name: document-api
+        image: smart-document/document-api:latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: DOCUMENT_RPC_URL
+          value: "document-rpc-service:9002"
+        - name: AUTH_RPC_URL
+          value: "auth-rpc-service:9001"
+        envFrom:
+        - configMapRef:
+            name: smart-document-config
+        - secretRef:
+            name: smart-document-secrets
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-api-service
+  namespace: smart-document
+spec:
+  selector:
+    app: document-api
+  ports:
+  - port: 8082
+    targetPort: 8082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-rpc
+  namespace: smart-document
+  labels:
+    app: document-rpc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: document-rpc
+  template:
+    metadata:
+      labels:
+        app: document-rpc
+    spec:
+      containers:
+      - name: document-rpc
+        image: smart-document/document-rpc:latest
+        ports:
+        - containerPort: 9002
+        envFrom:
+        - configMapRef:
+            name: smart-document-config
+        - secretRef:
+            name: smart-document-secrets
+        livenessProbe:
+          exec:
+            command:
+            - grpc_health_probe
+            - -addr=localhost:9002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - grpc_health_probe
+            - -addr=localhost:9002
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-rpc-service
+  namespace: smart-document
+spec:
+  selector:
+    app: document-rpc
+  ports:
+  - port: 9002
+    targetPort: 9002
