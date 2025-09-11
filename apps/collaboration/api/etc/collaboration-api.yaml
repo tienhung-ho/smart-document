@@ -1,0 +1,55 @@
+environment: development
+
+server:
+  host: 0.0.0.0
+  port: 8083
+  read_timeout: 30
+  write_timeout: 30
+
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+  database: 1
+
+kafka:
+  brokers:
+    - ${KAFKA_BROKERS:localhost:9092}
+  topics:
+    operations: collaboration-operations
+    presence: collaboration-presence
+  group_id: collaboration-api-service
+
+websocket:
+  read_buffer_size: 1024
+  write_buffer_size: 1024
+  check_origin: false
+  max_connections: 10000
+  ping_period: 54
+  pong_wait: 60
+  write_wait: 10
+
+auth:
+  rpc_url: ${AUTH_RPC_URL:auth-rpc-service:9001}
+
+collaboration_rpc:
+  url: ${COLLABORATION_RPC_URL:collaboration-rpc-service:9003}
+
+operational_transform:
+  max_operations_per_document: 1000
+  operation_timeout: 30
+  conflict_resolution: server_wins
+
+session:
+  max_users_per_document: 100
+  session_timeout: 3600
+  cleanup_interval: 300
+
+logging:
+  level: info
+  format: json
+  output: both
+  max_size: 100
+  max_backups: 3
+  max_age: 28
+  compress: true
