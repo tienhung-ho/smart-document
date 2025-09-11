@@ -1,0 +1,52 @@
+environment: development
+
+server:
+  host: 0.0.0.0
+  port: 9002
+  read_timeout: 30
+  write_timeout: 30
+
+database:
+  driver: postgres
+  host: ${DB_HOST:localhost}
+  port: ${DB_PORT:5432}
+  username: ${DB_USER:postgres}
+  password: ${DB_PASSWORD:postgres}
+  database: ${DB_NAME:smart_document}
+  ssl_mode: disable
+  max_idle: 10
+  max_open: 100
+
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+  database: 0
+
+elasticsearch:
+  url: ${ELASTICSEARCH_URL:http://localhost:9200}
+  index: documents
+  shards: 1
+  replicas: 0
+
+storage:
+  type: minio
+  minio:
+    endpoint: ${STORAGE_ENDPOINT:localhost:9000}
+    access_key_id: ${STORAGE_ACCESS_KEY:minioadmin}
+    secret_access_key: ${STORAGE_SECRET_KEY:minioadmin}
+    use_ssl: false
+    bucket_name: documents
+
+grpc:
+  health_check: true
+  reflection: true
+
+logging:
+  level: info
+  format: json
+  output: both
+  max_size: 100
+  max_backups: 3
+  max_age: 28
+  compress: true
