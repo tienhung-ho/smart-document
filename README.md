@@ -1,7 +1,6 @@
 # Smart Document Microservice
 
 A robust document management microservice built with Go, featuring hybrid configuration, centralized error handling, and structured logging.
-aaaa
 
 ## 🏗️ Architecture
 
