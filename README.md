@@ -1,6 +1,7 @@
 # Smart Document Microservice
 
 A robust document management microservice built with Go, featuring hybrid configuration, centralized error handling, and structured logging.
+aaaa
 
 ## 🏗️ Architecture
 
@@ -15,18 +16,21 @@ This project follows a microservice architecture with the following services:
 ## 🛠️ Core Features
 
 ### Hybrid Configuration (Viper)
+
 - YAML configuration files with environment-specific overrides
 - Environment variable support with prefix `SD_`
 - Hierarchical configuration loading
 - Default values for all settings
 
 ### Error Handling
+
 - Centralized error management with custom error codes
 - Structured error context and details
 - HTTP status code mapping
 - Stack trace collection for debugging
 
 ### Logging (Zap)
+
 - High-performance structured logging
 - Multiple output formats (JSON, Console)
 - File rotation with lumberjack
@@ -56,6 +60,7 @@ smart-document/
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Go 1.21+
 - PostgreSQL
 - Redis
@@ -64,6 +69,7 @@ smart-document/
 ### Setup
 
 1. **Clone and setup**:
+
    ```bash
    git clone <repository>
    cd smart-document
@@ -71,6 +77,7 @@ smart-document/
    ```
 
 2. **Configure environment**:
+
    ```bash
    cp apps/gateway/etc/gateway.yaml apps/gateway/etc/config-local.yaml
    # Edit config-local.yaml with your settings
@@ -85,11 +92,13 @@ smart-document/
 ## ⚙️ Configuration
 
 ### Configuration Files
+
 - `gateway.yaml` - Default configuration
 - `config-production.yaml` - Production overrides
 - `config-development.yaml` - Development overrides
 
 ### Environment Variables
+
 All configuration can be overridden with environment variables using the `SD_` prefix:
 
 ```bash
@@ -100,6 +109,7 @@ export SD_JWT_SECRET=your-secret-key
 ```
 
 ### Configuration Structure
+
 ```yaml
 environment: development
 server:
@@ -181,6 +191,7 @@ make docker-down
 ## 📊 Monitoring
 
 The project includes monitoring setup:
+
 - Prometheus metrics
 - Grafana dashboards
 - Jaeger tracing
@@ -191,11 +202,13 @@ The project includes monitoring setup:
 ### Adding a New Service
 
 1. Create service directory structure:
+
    ```bash
    mkdir -p apps/myservice/{api,rpc,model,tests}
    ```
 
 2. Create configuration:
+
    ```bash
    cp apps/gateway/etc/gateway.yaml apps/myservice/etc/myservice.yaml
    ```
@@ -207,16 +220,19 @@ The project includes monitoring setup:
 ### Common Patterns
 
 **Loading Configuration:**
+
 ```go
 cfg, err := config.LoadConfig("./etc", "service-name")
 ```
 
 **Initializing Logger:**
+
 ```go
 logger, err := logging.InitLogger(&cfg.Logging)
 ```
 
 **Error Handling:**
+
 ```go
 return errors.BadRequest("Invalid input").WithContext("field", value)
 ```
